@@ -1,0 +1,3 @@
+rootProject.name = 'HelloWebvttWithThumbnails'
+
+include ':app'
