@@ -24,8 +24,7 @@ export default class WebVTTSlider extends Component {
         imageuri: null,
         previewShiftX: 0,
         previewHidden: true,
-        vtt: null,
-        value: 0
+        vtt: null
     }
 
     componentDidMount() {
@@ -51,7 +50,6 @@ export default class WebVTTSlider extends Component {
     onSliderValueChange(value) {
         let index = Math.abs(Math.round(value * (this.state.vtt.cues.length -1)))
         this.setState({
-            value: value,
             previewShiftX: this._checkBound(value * sliderWidth - PREVIEW_HALF_WIDTH),
             imageuri: this.props.host + this.state.vtt.cues[index].text,
             previewHidden: false
@@ -75,7 +73,7 @@ export default class WebVTTSlider extends Component {
         {this.renderImage()}
         <Slider ref='slider'
             style={[styles.slider, this.props.style]}
-            value={this.state.value}
+            value={this.props.value}
             onValueChange={this.onSliderValueChange.bind(this)}
             onSlidingComplete={this.onSlidingComplete.bind(this)} />
         </View>

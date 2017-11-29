@@ -22,12 +22,34 @@ export default class App extends Component {
     value: 0
   }
 
+  constructor(props){
+    super(props)
+    this.lastAngleValue = 0
+  }
+
   onDialComplete() {
     this.refs.webvttslider.onSlidingComplete()
   }
 
   onvaluechange(a, r) {
-    this.refs.webvttslider.onSliderValueChange(a % 360 / 360)
+
+    angleValue = a % 360 / 360
+    let newAngleDiff = angleValue - this.lastAngleValue
+    this.lastAngleValue = angleValue
+    if(Math.abs(newAngleDiff) > 0.9){
+      newAngleDiff += (newAngleDiff > 0) ? -1 : 1
+    }
+      
+    let newSliderValue = this.state.value + newAngleDiff
+    if(newSliderValue < 0)
+      newSliderValue = 0
+    else if(newSliderValue > 1)
+      newSliderValue = 1
+    this.setState({
+      value: newSliderValue
+    }) 
+      
+    this.refs.webvttslider.onSliderValueChange(this.state.value)
   }
 
   render() {
@@ -48,8 +70,6 @@ export default class App extends Component {
           onComplete={this.onDialComplete.bind(this)}
           onValueChange={this.onvaluechange.bind(this)}
         />
-
-
 
       </View>
     );
