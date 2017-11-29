@@ -9,13 +9,14 @@ import {
     Dimensions
 } from 'react-native';
 
+let sliderWidth = 300
+
 const PREVIEW_WIDTH = 150
 const PREVIEW_HEIGHT = 84
 const DEFAULT_THUMB_SIZE = 40
-const TEST_SLIDER_WIDTH = 300
 const PREVIEW_HALF_WIDTH = PREVIEW_WIDTH / 2
 const PREVIEW_LEFT_BOUND = 0
-const PREVIEW_RIGHT_BOUND = TEST_SLIDER_WIDTH - PREVIEW_WIDTH
+
 
 export default class WebVTTSlider extends Component {
 
@@ -23,66 +24,61 @@ export default class WebVTTSlider extends Component {
         imageuri: null,
         previewShiftX: 0,
         previewHidden: true,
-        vtt: null
+        vtt: null,
+        value: 0
     }
 
     componentDidMount() {
-        fetch('http://127.0.0.1/earth.vtt')
+        fetch(this.props.host + this.props.vttPath)
             .then(response => response.text())
             .then(body => {
-                console.log(`download done`)
+                console.log(`download OK`)
                 this.setState({
                     vtt: webvtt.parse(body)
                 })
             })
     }
 
+    _checkBound(left){
+        if(this.refs.slider.props.style.length > 1 && this.refs.slider.props.style[1].width){
+            sliderWidth = this.refs.slider.props.style[1].width
+        }
+
+        let PREVIEW_RIGHT_BOUND = sliderWidth - PREVIEW_WIDTH
+        return (left < PREVIEW_LEFT_BOUND) ? 0 : (left > PREVIEW_RIGHT_BOUND) ? PREVIEW_RIGHT_BOUND : left
+    }
+
     onSliderValueChange(value) {
-
-        let index = Math.round(value * (this.state.vtt.cues.length -1))
-        console.log(`index:${index}`)
-
-        let center = value * TEST_SLIDER_WIDTH
-        let left = center - PREVIEW_HALF_WIDTH
-       
-        if(left < PREVIEW_LEFT_BOUND)
-            left = 0
-        else if(left > PREVIEW_RIGHT_BOUND)
-            left = PREVIEW_RIGHT_BOUND
-
+        let index = Math.abs(Math.round(value * (this.state.vtt.cues.length -1)))
         this.setState({
             value: value,
-            previewShiftX: left,
-            imageuri: 'http://127.0.0.1' + this.state.vtt.cues[index].text,
+            previewShiftX: this._checkBound(value * sliderWidth - PREVIEW_HALF_WIDTH),
+            imageuri: this.props.host + this.state.vtt.cues[index].text,
             previewHidden: false
         })
-
-        
     }
 
     onSlidingComplete() {
-        console.log(`onSlidingComplete`)
         this.setState({
             previewHidden: true
         })
     }
 
     renderImage(){
-        if(this.state.previewHidden)
-            return null
-        
-        return (
+        return (this.state.previewHidden) ? null : (
             <Image source={{uri:this.state.imageuri}} style={[styles.preview, { left: this.state.previewShiftX }]} pointerEvents="none" />
         )
     }
 
     render = () => (
-        <Slider style={styles.slider}
+        <View  >
+        {this.renderImage()}
+        <Slider ref='slider'
+            style={[styles.slider, this.props.style]}
             value={this.state.value}
             onValueChange={this.onSliderValueChange.bind(this)}
-            onSlidingComplete={this.onSlidingComplete.bind(this)} >
-            {this.renderImage()}
-        </Slider>
+            onSlidingComplete={this.onSlidingComplete.bind(this)} />
+        </View>
     )
 }
 
@@ -93,9 +89,10 @@ const styles = StyleSheet.create({
     },
 
     preview: {
-        top: -PREVIEW_HEIGHT,
+        position:'absolute',
+        top: -PREVIEW_HEIGHT-20,
         width: PREVIEW_WIDTH,
         height: PREVIEW_HEIGHT,
-        backgroundColor: 'red'
+        backgroundColor: 'black'
     }
 })
