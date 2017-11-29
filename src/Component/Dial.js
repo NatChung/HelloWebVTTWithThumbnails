@@ -178,9 +178,9 @@ const styles = StyleSheet.create({
   innerDialDecorator: {
     top: 10,
     left: 10,
-    width: 130,
-    height: 130,
-    borderRadius: 65,
+    width: 100,
+    height: 100,
+    borderRadius: 50,
     backgroundColor: 'white',
     elevation: 0,
   },
