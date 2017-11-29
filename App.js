@@ -15,28 +15,60 @@ import {
 
 import WebVTTSlider from './src/Component/WebVTTSlider'
 import { Dial } from './src/Component/Dial'
+import Video from 'react-native-video'
 
 export default class App extends Component {
 
   state = {
-    value: 0
+    value: 0,
+    paused: false,
+    previewHidden: true
+  }
+
+  get xTimeSpeed(){
+    return 8
   }
 
   constructor(props){
     super(props)
     this.lastAngleValue = 0
     this.lastRaduis = 0
-    this.raduisValue = 0
   }
 
   onDialComplete() {
-    this.refs.webvttslider.onSlidingComplete()
     this.raduisValue = 0
+    this.player.seek(this.state.value * this.duration)
+    this.setState({
+      paused: false,
+      previewHidden: true
+    })
   }
 
-  get xTimeSpeed(){
-    return 8
+  onSlidingCompleteWithValue(value){
+    this.player.seek(value * this.duration)
+    this.setState({
+      value: value,
+      paused: false,
+      previewHidden: true
+    })
   }
+
+  onSlidingStart(){
+
+    this.setState({
+      paused: true,
+      previewHidden: false
+    })
+    
+  }
+
+  onDialStart() {
+    this.setState({
+      previewHidden: false,
+      paused: true
+    })
+  }
+
 
   _getDialDiffAngle(a){
     let angleValue = a % 360 / 360
@@ -53,7 +85,7 @@ export default class App extends Component {
 
     let newTimeSpeed = (raduisValue > 0.7) ? 1 : this.xTimeSpeed
 
-    let newSliderValue = this.refs.webvttslider.currentValue + (this._getDialDiffAngle(a)/newTimeSpeed)
+    let newSliderValue = this.slider.currentValue + (this._getDialDiffAngle(a)/newTimeSpeed)
     if(newSliderValue < 0)
       newSliderValue = 0
     else if(newSliderValue > 1)
@@ -72,27 +104,45 @@ export default class App extends Component {
 
     this.raduisValue += this._getDiffRadius(r)
     let newValue = this._getNewSliderValue(a, this.raduisValue)
-    this.refs.webvttslider.moveSliderValue(newValue, 1)
+    this.slider.moveSliderValue(newValue)
     this.setState({
       value: newValue
     }) 
+  }
+
+  onVideoLoaded(data){
+    this.duration = data.duration
+  }
+
+  onVideoProgress(data){
+    this.setState({value: data.currentTime/this.duration})
   }
 
   render() {
     const borderRadius = Dimensions.get('window').width * 0.5
     return (
       <View style={styles.container}>
-        <View style={{ width: Dimensions.get('window').width, height: 250, backgroundColor: 'gray' }} />
-        <WebVTTSlider ref='webvttslider'
+        <Video source={{uri: "https://98ab8944.ngrok.io/hls/index.m3u8"}}   // Can be a URL or a local file.
+          ref={ref => this.player = ref} 
+          paused={this.state.paused}
+          onLoad={this.onVideoLoaded.bind(this)}
+          onProgress={this.onVideoProgress.bind(this)}
+          style={{ width: Dimensions.get('window').width, height: 250, backgroundColor: 'gray' }}/>
+
+        <WebVTTSlider ref={ref => this.slider = ref}
           host={'https://98ab8944.ngrok.io'}
           vttPath={'/earth.vtt'}
+          previewHidden={this.state.previewHidden}
           style={{ width: Dimensions.get('window').width, top: -20 }}
-          value={this.state.value}/>
+          value={this.state.value}
+          onSlidingStart={this.onSlidingStart.bind(this)}
+          onSlidingCompleteWithValue={this.onSlidingCompleteWithValue.bind(this)} />
 
         <Dial
           responderStyle={[styles.responderStyle, { borderRadius }]}
           wrapperStyle={styles.wheelWrapper}
           onComplete={this.onDialComplete.bind(this)}
+          onStart={this.onDialStart.bind(this)}
           onValueChange={this._onDialValueChange.bind(this)}
         />
 

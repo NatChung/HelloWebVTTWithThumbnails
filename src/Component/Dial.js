@@ -41,7 +41,9 @@ export class Dial extends Component {
       },
       onMoveShouldSetPanResponder: (e, g) => true,
       onMoveShouldSetPanResponderCapture: (e, gestureState) => true,
-      onPanResponderGrant: (e, gestureState) => true,
+      onPanResponderGrant: (e, gestureState) => {
+        if(this.props.onStart) this.props.onStart()
+      },
       onPanResponderMove: (e, gestureState) => {
         this.updateAngle(gestureState)
       },

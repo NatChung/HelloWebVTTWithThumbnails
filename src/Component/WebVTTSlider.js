@@ -1,16 +1,15 @@
 import React, { Component } from 'react';
 import webvtt from 'node-webvtt'
+import Slider from 'react-native-slider'
 import {
     Platform,
     StyleSheet,
     View,
-    Slider,
     Image,
     Dimensions
 } from 'react-native';
 
 let sliderWidth = 300
-
 const PREVIEW_WIDTH = 150
 const PREVIEW_HEIGHT = 84
 const DEFAULT_THUMB_SIZE = 40
@@ -21,26 +20,34 @@ const PREVIEW_LEFT_BOUND = 0
 export default class WebVTTSlider extends Component {
 
     state = {
-        imageuri: null,
+        imageuri: '',
         previewShiftX: 0,
-        previewHidden: true,
-        vtt: null,
         value: 0
+    }
+
+    constructor(props){
+        super(props)
     }
 
     get currentValue(){
         return this.state.value
     }
 
+    componentWillReceiveProps(nextProps){
+        if(this.props.value != nextProps.value){
+            this.setState({value: nextProps.value})
+        }
+    }
+
     componentDidMount() {
         fetch(this.props.host + this.props.vttPath)
             .then(response => response.text())
-            .then(body => {
-                console.log(`download OK`)
-                this.setState({
-                    vtt: webvtt.parse(body)
-                })
-            })
+            .then(body => this._convertToWebVTT(body))
+    }
+
+    _convertToWebVTT(body){
+        this.webvtt = webvtt.parse(body)
+        this.duration = this.webvtt.cues[this.webvtt.cues.length-1].end
     }
 
     _checkBound(left){
@@ -52,30 +59,34 @@ export default class WebVTTSlider extends Component {
         return (left < PREVIEW_LEFT_BOUND) ? 0 : (left > PREVIEW_RIGHT_BOUND) ? PREVIEW_RIGHT_BOUND : left
     }
 
-
-
-    moveSliderValue(value, n){
-        let index = Math.abs(Math.round(value * (this.state.vtt.cues.length/n -1)))
-        this.setState({
-            previewShiftX: this._checkBound(value * sliderWidth - PREVIEW_HALF_WIDTH),
-            imageuri: this.props.host + this.state.vtt.cues[index*n].text,
-            previewHidden: false,
-            value: value
+    moveSliderValue(value){
+        let current = value * this.duration
+        this.webvtt.cues.forEach(vtt => {
+            if(current >= vtt.start && current <= vtt.end){
+                this.setState({
+                    previewShiftX: this._checkBound(value * sliderWidth - PREVIEW_HALF_WIDTH),
+                    imageuri: this.props.host + vtt.text,
+                    value: value
+                })
+                return
+            }
         })
     }
 
     _onSliderValueChange(value) {
-        this.moveSliderValue(value, 2)
+        this.moveSliderValue(value)
+    }
+
+    onSlidingStart(){
+        if(this.props.onSlidingStart) this.props.onSlidingStart()
     }
 
     onSlidingComplete() {
-        this.setState({
-            previewHidden: true
-        })
+        if(this.props.onSlidingCompleteWithValue) this.props.onSlidingCompleteWithValue(this.state.value)
     }
 
     renderImage(){
-        return (this.state.previewHidden) ? null : (
+        return (this.props.previewHidden) ? null : (
             <Image source={{uri:this.state.imageuri}} style={[styles.preview, { left: this.state.previewShiftX }]} pointerEvents="none" />
         )
     }
@@ -87,7 +98,8 @@ export default class WebVTTSlider extends Component {
             style={[styles.slider, this.props.style]}
             value={this.state.value}
             onValueChange={this._onSliderValueChange.bind(this)}
-            onSlidingComplete={this.onSlidingComplete.bind(this)} />
+            onSlidingComplete={this.onSlidingComplete.bind(this)}
+            onSlidingStart={this.onSlidingStart.bind(this)} />
         </View>
     )
 }
