@@ -3,7 +3,9 @@ This is a practice project for drag and draw seek with preview
 
 ### FastImage preload not work in Android
 I using react native FastImage, it provided preload feature it works fine in iOS but Android. The problem is the image (<Fastimage/>) loading source not from cache.
-### Add .diskCacheStrategy(DiskCacheStrategy.SOURCE)
+
+1. Using preoload the prop: priority is must
+2. Add .diskCacheStrategy(DiskCacheStrategy.SOURCE)
 ###### in FastImageViewManager.java 
 ```java
 Glide
