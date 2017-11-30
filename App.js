@@ -122,7 +122,7 @@ export default class App extends Component {
     const borderRadius = Dimensions.get('window').width * 0.5
     return (
       <View style={styles.container}>
-        <Video source={{uri: "https://98ab8944.ngrok.io/hls/index.m3u8"}}   // Can be a URL or a local file.
+        <Video source={{uri: "https://s3-ap-northeast-1.amazonaws.com/sv-doorbell-demo/playback/hls2/index.m3u8"}}   // Can be a URL or a local file.
           ref={ref => this.player = ref} 
           paused={this.state.paused}
           onLoad={this.onVideoLoaded.bind(this)}
@@ -130,10 +130,10 @@ export default class App extends Component {
           style={{ width: Dimensions.get('window').width, height: 250, backgroundColor: 'gray' }}/>
 
         <WebVTTSlider ref={ref => this.slider = ref}
-          host={'https://98ab8944.ngrok.io'}
-          vttPath={'/earth.vtt'}
+          host={'https://s3-ap-northeast-1.amazonaws.com/sv-doorbell-demo/playback'}
+          vttPath={'/earth2.vtt'}
           previewHidden={this.state.previewHidden}
-          style={{ width: Dimensions.get('window').width, top: -20 }}
+          style={{ width: Dimensions.get('window').width, top: -30 }}
           value={this.state.value}
           onSlidingStart={this.onSlidingStart.bind(this)}
           onSlidingCompleteWithValue={this.onSlidingCompleteWithValue.bind(this)} />
@@ -153,7 +153,7 @@ export default class App extends Component {
 
 const styles = StyleSheet.create({
   responderStyle: {
-    top: 20,
+    top: 60,
     backgroundColor: 'white',
     elevation: 1,
     shadowColor: 'rgba(0,0,0,.7)',

@@ -1,6 +1,7 @@
 import React, { Component } from 'react';
 import webvtt from 'node-webvtt'
 import Slider from 'react-native-slider'
+import FastImage from 'react-native-fast-image'
 import {
     Platform,
     StyleSheet,
@@ -27,6 +28,10 @@ export default class WebVTTSlider extends Component {
 
     constructor(props){
         super(props)
+
+        fetch(this.props.host + this.props.vttPath)
+        .then(response => response.text())
+        .then(body => this._convertToWebVTT(body))
     }
 
     get currentValue(){
@@ -39,15 +44,25 @@ export default class WebVTTSlider extends Component {
         }
     }
 
-    componentDidMount() {
-        fetch(this.props.host + this.props.vttPath)
-            .then(response => response.text())
-            .then(body => this._convertToWebVTT(body))
+    _preloadImages(vtts){
+
+        let imageUris = []
+        vtts.forEach((vtt, index, array) => {
+            imageUris.push({
+                uri: this.props.host + vtt.text,
+                priority: FastImage.priority.normal
+            })
+            if(index == (array.length - 1)){
+                FastImage.preload(imageUris)
+            }
+        })
     }
+
 
     _convertToWebVTT(body){
         this.webvtt = webvtt.parse(body)
         this.duration = this.webvtt.cues[this.webvtt.cues.length-1].end
+        this._preloadImages(this.webvtt.cues)
     }
 
     _checkBound(left){
@@ -60,6 +75,12 @@ export default class WebVTTSlider extends Component {
     }
 
     moveSliderValue(value){
+
+        if(!this.duration || !this.webvtt) {
+            this.setState({value: value})
+            return
+        }
+
         let current = value * this.duration
         this.webvtt.cues.forEach(vtt => {
             if(current >= vtt.start && current <= vtt.end){
@@ -86,8 +107,10 @@ export default class WebVTTSlider extends Component {
     }
 
     renderImage(){
-        return (this.props.previewHidden) ? null : (
-            <Image source={{uri:this.state.imageuri}} style={[styles.preview, { left: this.state.previewShiftX }]} pointerEvents="none" />
+        return (this.props.previewHidden || this.state.imageuri==='') ? null : (
+            <FastImage source={{uri:this.state.imageuri}}
+                priority={FastImage.priority.normal}
+                style={[styles.preview, { left: this.state.previewShiftX }]} pointerEvents="none" />
         )
     }
 
