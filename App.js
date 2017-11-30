@@ -11,13 +11,16 @@ import {
   Text,
   View,
   Dimensions,
-  StatusBar
+  StatusBar,
+  TouchableWithoutFeedback,
+  Image
 } from 'react-native';
 
 import WebVTTSlider from './src/Component/WebVTTSlider'
 import { Dial } from './src/Component/Dial'
 import Video from 'react-native-video'
 import { Toolbar, COLOR, ThemeProvider } from 'react-native-material-ui'
+import Orientation from 'react-native-orientation';
 
 export default class App extends Component {
 
@@ -28,13 +31,17 @@ export default class App extends Component {
   }
 
   get xTimeSpeed(){
-    return 8
+    return 2
   }
 
   constructor(props){
     super(props)
     this.lastAngleValue = 0
     this.lastRaduis = 0
+  }
+  componentDidMount(){
+    if(Platform.OS === 'android')
+      Orientation.lockToPortrait();
   }
 
   onDialComplete() {
@@ -126,13 +133,20 @@ export default class App extends Component {
       <ThemeProvider uiTheme={uiTheme}>
       <StatusBar backgroundColor="#396CD2" barStyle="light-content" />
       <Toolbar />
+      
       <View style={styles.container}>
+      <Image source={require('./src/Images/background.png')} style={styles.backgroundImage} />
+      <TouchableWithoutFeedback 
+
+        onPress={()=> {this.setState({paused: !this.state.paused})}} >
         <Video source={{uri: "https://s3-ap-northeast-1.amazonaws.com/sv-doorbell-demo/playback/hls2/index.m3u8"}}   // Can be a URL or a local file.
           ref={ref => this.player = ref} 
           paused={this.state.paused}
           onLoad={this.onVideoLoaded.bind(this)}
           onProgress={this.onVideoProgress.bind(this)}
-          style={{ width: Dimensions.get('window').width, height: 250, backgroundColor: 'gray' }}/>
+          style={{ width: Dimensions.get('window').width, height: 250, justifyContent:'center' }}/>
+
+        </TouchableWithoutFeedback>
 
         <WebVTTSlider ref={ref => this.slider = ref}
           host={'https://s3-ap-northeast-1.amazonaws.com/sv-doorbell-demo/playback'}
@@ -163,7 +177,7 @@ const uiTheme = {
   },
   toolbar: {
       container: {
-          height: (Platform.OS === 'ios') ? 64 : 50,
+          height: (Platform.OS === 'ios') ? 64 : 40,
       },
   },
 };
@@ -203,4 +217,9 @@ const styles = StyleSheet.create({
     color: '#333333',
     marginBottom: 5,
   },
+  backgroundImage: {
+    flex: 1,
+    resizeMode: 'cover', // or 'stretch'
+    position:'absolute',
+  }
 });
