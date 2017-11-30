@@ -119,6 +119,8 @@ export default class WebVTTSlider extends Component {
         {this.renderImage()}
         <Slider ref='slider'
             style={[styles.slider, this.props.style]}
+            thumbTintColor = {'#396CD2'}
+            minimumTrackTintColor= {'red'}
             value={this.state.value}
             onValueChange={this._onSliderValueChange.bind(this)}
             onSlidingComplete={this.onSlidingComplete.bind(this)}

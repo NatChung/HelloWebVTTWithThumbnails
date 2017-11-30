@@ -10,12 +10,14 @@ import {
   StyleSheet,
   Text,
   View,
-  Dimensions
+  Dimensions,
+  StatusBar
 } from 'react-native';
 
 import WebVTTSlider from './src/Component/WebVTTSlider'
 import { Dial } from './src/Component/Dial'
 import Video from 'react-native-video'
+import { Toolbar, COLOR, ThemeProvider } from 'react-native-material-ui'
 
 export default class App extends Component {
 
@@ -121,6 +123,9 @@ export default class App extends Component {
   render() {
     const borderRadius = Dimensions.get('window').width * 0.5
     return (
+      <ThemeProvider uiTheme={uiTheme}>
+      <StatusBar backgroundColor="#396CD2" barStyle="light-content" />
+      <Toolbar />
       <View style={styles.container}>
         <Video source={{uri: "https://s3-ap-northeast-1.amazonaws.com/sv-doorbell-demo/playback/hls2/index.m3u8"}}   // Can be a URL or a local file.
           ref={ref => this.player = ref} 
@@ -147,9 +152,21 @@ export default class App extends Component {
         />
 
       </View>
+      </ThemeProvider>
     );
   }
 }
+
+const uiTheme = {
+  palette: {
+      primaryColor: '#396CD2',
+  },
+  toolbar: {
+      container: {
+          height: (Platform.OS === 'ios') ? 64 : 50,
+      },
+  },
+};
 
 const styles = StyleSheet.create({
   responderStyle: {
